@@ -10,12 +10,16 @@ from open_webui.env import (
     TOKEN_USAGE_LOG_ENABLED,
     TOKEN_USAGE_LOG_FILE_PATH,
     TOKEN_USAGE_DB_ENABLED,
+    ENABLE_OTEL,
     log,
 )
 from open_webui.internal.db import engine
 from open_webui.models.token_usage import TokenUsageTable, TokenUsage
 from sqlalchemy import inspect
 from open_webui.internal.db import SessionLocal
+
+if ENABLE_OTEL:
+    from open_webui.utils.telemetry.token_metrics import TokenUsageTelemetry
 
 @dataclass
 class TokenUsageEntry:
@@ -170,7 +174,8 @@ class TokenUsageLogger:
         request_id: Optional[str] = None,
         streaming: bool = False,
         token_source: str = "api",
-        metadata: Optional[Dict[str, Any]] = None
+        metadata: Optional[Dict[str, Any]] = None,
+        duration_ms: Optional[float] = None
     ):
         """Log token usage to the dedicated file"""
         if not self.enabled:
@@ -184,6 +189,20 @@ class TokenUsageLogger:
             estimated_cost = self._calculate_cost(
                 model, provider, prompt_tokens, completion_tokens
             )
+            if ENABLE_OTEL:
+                TokenUsageTelemetry.record_token_usage(
+                    model=model,
+                    provider=provider,
+                    prompt_tokens=prompt_tokens,
+                    completion_tokens=completion_tokens,
+                    total_cost=estimated_cost.get("total_cost", 0.0) if estimated_cost else 0.0,
+                    user_id=user_id,
+                    endpoint=endpoint,
+                    streaming=streaming,
+                    token_source=token_source,
+                    duration_ms=duration_ms,
+                    metadata=metadata
+                )
 
             # Create log entry
             entry = TokenUsageEntry(
