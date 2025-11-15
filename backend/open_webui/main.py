@@ -471,6 +471,7 @@ from open_webui.env import (
     EXTERNAL_PWA_MANIFEST_URL,
     AIOHTTP_CLIENT_SESSION_SSL,
     ENABLE_STAR_SESSIONS_MIDDLEWARE,
+    log
 )
 
 
@@ -521,6 +522,8 @@ from open_webui.utils.redis import get_sentinels_from_env
 
 from open_webui.constants import ERROR_MESSAGES
 
+from open_webui.middleware.token_usage import TokenUsageMiddleware
+from open_webui.env import TOKEN_USAGE_LOG_ENABLED
 
 if SAFE_MODE:
     print("SAFE MODE ENABLED")
@@ -1360,6 +1363,9 @@ app.include_router(utils.router, prefix="/api/v1/utils", tags=["utils"])
 if SCIM_ENABLED:
     app.include_router(scim.router, prefix="/api/v1/scim/v2", tags=["scim"])
 
+if TOKEN_USAGE_LOG_ENABLED:
+    app.add_middleware(TokenUsageMiddleware)
+    log.info("Token usage tracking enabled")
 
 try:
     audit_level = AuditLevel(AUDIT_LOG_LEVEL)

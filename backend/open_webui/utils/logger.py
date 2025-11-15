@@ -13,7 +13,10 @@ from open_webui.env import (
     GLOBAL_LOG_LEVEL,
     ENABLE_OTEL,
     ENABLE_OTEL_LOGS,
+    log
 )
+
+from open_webui.env import TOKEN_USAGE_LOG_ENABLED
 
 
 if TYPE_CHECKING:
@@ -132,6 +135,10 @@ def start_logger():
         format=stdout_format,
         filter=lambda record: "auditable" not in record["extra"],
     )
+    if TOKEN_USAGE_LOG_ENABLED:
+        from open_webui.utils.token_logger import token_usage_logger
+        # The logger initializes itself on import
+        logger.info("Token usage logging enabled")
     if AUDIT_LOG_LEVEL != "NONE":
         try:
             logger.add(
@@ -143,7 +150,7 @@ def start_logger():
                 filter=lambda record: record["extra"].get("auditable") is True,
             )
         except Exception as e:
-            logger.error(f"Failed to initialize audit log file handler: {str(e)}")
+            log.error(f"Failed to initialize audit log file handler: {str(e)}")
 
     logging.basicConfig(
         handlers=[InterceptHandler()], level=GLOBAL_LOG_LEVEL, force=True

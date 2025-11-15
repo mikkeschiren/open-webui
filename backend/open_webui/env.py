@@ -746,6 +746,11 @@ AUDIT_EXCLUDED_PATHS = os.getenv("AUDIT_EXCLUDED_PATHS", "/chats,/chat,/folders"
 AUDIT_EXCLUDED_PATHS = [path.strip() for path in AUDIT_EXCLUDED_PATHS]
 AUDIT_EXCLUDED_PATHS = [path.lstrip("/") for path in AUDIT_EXCLUDED_PATHS]
 
+# Token usage logging configuration
+TOKEN_USAGE_LOG_ENABLED = os.getenv("TOKEN_USAGE_LOG_ENABLED", "true").lower() == "true"
+TOKEN_USAGE_LOG_FILE_PATH = os.getenv("TOKEN_USAGE_LOG_FILE_PATH", f"{DATA_DIR}/token_usage.log")
+TOKEN_USAGE_LOG_ROTATION_SIZE = os.getenv("TOKEN_USAGE_LOG_ROTATION_SIZE", "100MB")
+TOKEN_USAGE_DB_ENABLED = os.getenv("TOKEN_USAGE_DB_ENABLED", "true").lower() == "true"
 
 ####################################
 # OPENTELEMETRY
